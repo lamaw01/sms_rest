@@ -92,6 +92,7 @@ Future<void> main() async {
   });
 
   server.get('/sms_openvox', (req, res) async {
+    //add delay para dile ma ddos
     await Future.delayed(Duration(milliseconds: 100));
 
     //check parameters
@@ -148,9 +149,9 @@ Future<void> main() async {
     };
 
     try {
-      final uri = Uri.http('172.21.3.18:80', '/sendsms', queryParameters);
+      final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
 
-      final response = await http.get(uri);
+      final response = await http.get(uri).timeout(Duration(seconds: 10));
 
       res.status(200).send(response.body);
     } catch (e) {
