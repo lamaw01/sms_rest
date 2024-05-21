@@ -8,6 +8,7 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  http: ^1.2.1
   mysql_client: ^0.0.27
   server_nano: ^1.5.1
   # path: ^1.8.0
