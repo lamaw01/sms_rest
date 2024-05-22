@@ -148,11 +148,16 @@ Future<void> main() async {
     };
 
     try {
-      // final uri = Uri.http('172.21.3.18:80', '/sendsms', queryParameters);
+      final uri = Uri.http('172.21.3.18:80', '/sendsms', queryParameters);
 
-      final uri = Uri.https('api.restful-api.dev', '/objects');
+      final test = Uri.http(
+        '103.62.153.74:53000',
+        '/dtr_api/get_app_version.php',
+      );
 
-      final response = await http.get(uri);
+      // final uri = Uri.https('api.restful-api.dev', '/objects');
+
+      final response = await http.get(test);
 
       res.status(200).send(response.body);
     } catch (e) {
