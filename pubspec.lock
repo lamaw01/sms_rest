@@ -173,10 +173,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: bdb68674043280c3428e9ec998512fb681678676b3c54e773629ffe74419f8c7
+      sha256: d584fa6707a52763a52446f02cc621b077888fb63b93bbcb1143a7be5a0c0c04
       url: "https://pub.dev"
     source: hosted
-    version: "1.15.0"
+    version: "1.11.0"
   mime:
     dependency: transitive
     description:
@@ -269,10 +269,10 @@ packages:
     dependency: transitive
     description:
       name: shelf_web_socket
-      sha256: "073c147238594ecd0d193f3456a5fe91c4b0abbcc68bf5cd95b36c4e194ac611"
+      sha256: "9ca081be41c60190ebcb4766b2486a7d50261db7bd0f5d9615f2d653637a84c1"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0"
+    version: "1.0.4"
   source_map_stack_trace:
     dependency: transitive
     description:
@@ -333,26 +333,26 @@ packages:
     dependency: "direct dev"
     description:
       name: test
-      sha256: d11b55850c68c1f6c0cf00eabded4e66c4043feaf6c0d7ce4a36785137df6331
+      sha256: "7ee446762c2c50b3bd4ea96fe13ffac69919352bd3b4b17bac3f3465edc58073"
       url: "https://pub.dev"
     source: hosted
-    version: "1.25.5"
+    version: "1.25.2"
   test_api:
     dependency: transitive
     description:
       name: test_api
-      sha256: "2419f20b0c8677b2d67c8ac4d1ac7372d862dc6c460cdbb052b40155408cd794"
+      sha256: "9955ae474176f7ac8ee4e989dadfb411a58c30415bcfb648fa04b2b8a03afa7f"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.1"
+    version: "0.7.0"
   test_core:
     dependency: transitive
     description:
       name: test_core
-      sha256: "4d070a6bc36c1c4e89f20d353bfd71dc30cdf2bd0e14349090af360a029ab292"
+      sha256: "2bc4b4ecddd75309300d8096f781c0e3280ca1ef85beda558d33fcbedc2eead4"
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.2"
+    version: "0.6.0"
   tuple:
     dependency: transitive
     description:
@@ -393,22 +393,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.1"
-  web_socket:
-    dependency: transitive
-    description:
-      name: web_socket
-      sha256: "217f49b5213796cb508d6a942a5dc604ce1cb6a0a6b3d8cb3f0c314f0ecea712"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.4"
   web_socket_channel:
     dependency: transitive
     description:
       name: web_socket_channel
-      sha256: a2d56211ee4d35d9b344d9d4ce60f362e4f5d1aafb988302906bd732bc731276
+      sha256: "58c6666b342a38816b2e7e50ed0f1e261959630becd4c879c4f26bfa14aa5a42"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "2.4.5"
   webkit_inspection_protocol:
     dependency: transitive
     description:

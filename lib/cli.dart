@@ -1,6 +1,5 @@
 import 'package:mysql_client/mysql_client.dart';
 import 'package:server_nano/server_nano.dart';
-
 import 'package:http/http.dart' as http;
 
 Future<void> main() async {
@@ -149,9 +148,13 @@ Future<void> main() async {
     };
 
     try {
-      final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
+      final uri = Uri.http(
+        'admin:paras4T%40UC-1%2CCorp.@172.21.3.18:80',
+        '/sendsms',
+        queryParameters,
+      );
 
-      final response = await http.get(uri).timeout(Duration(seconds: 10));
+      final response = await http.get(uri);
 
       res.status(200).send(response.body);
     } catch (e) {
