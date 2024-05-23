@@ -148,16 +148,9 @@ Future<void> main() async {
     };
 
     try {
-      final uri = Uri.http('172.21.3.18:80', '/sendsms', queryParameters);
+      final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
 
-      final test = Uri.http(
-        '103.62.153.74:53000',
-        '/dtr_api/get_app_version.php',
-      );
-
-      // final uri = Uri.https('api.restful-api.dev', '/objects');
-
-      final response = await http.get(test);
+      final response = await http.get(uri);
 
       res.status(200).send(response.body);
     } catch (e) {
@@ -167,8 +160,3 @@ Future<void> main() async {
 
   server.listen(port: 3000, serverMode: ServerMode.compatibility);
 }
-
-//'admin:paras4T%40UC-1%2CCorp.@172.21.3.18:80', '/sendsms',
-//curl -u admin:paras4T@UC-1,Corp. --basic http://172.21.3.18:80
-//curl "http://172.21.3.18:80/sendsms?username=ovsms&password=ovSMS@2020&phonenumber=09171626273&message=Test message&port=1"
-//curl admin:paras4T%40UC-1%2CCorp.@172.21.3.18:80/sendsms?username=ovsms&password=ovSMS@2020&phonenumber=09171626273&message=Test message&port=1
