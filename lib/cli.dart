@@ -36,7 +36,7 @@ Future<void> main() async {
     if (!req.query.containsKey('phonenumber') ||
         !req.query.containsKey('message') ||
         !req.query.containsKey('token')) {
-      res.status(400).send('Bad request, missing parameters');
+      res.status(400).send('Missing parameters');
       return;
     }
 
@@ -60,15 +60,15 @@ Future<void> main() async {
 
     //check phone number if proper format
     if ((phonenumber.length != 13 && is63)) {
-      res.status(400).send('Bad request, phonenumber format (+63)');
+      res.status(400).send('Invalid phonenumber format(+63)');
       return;
     } else if (phonenumber.length != 11 && is09) {
-      res.status(400).send('Bad request, phonenumber format (09)');
+      res.status(400).send('Invalid phonenumber format(09)');
       return;
     }
 
     if (!is63 && !is09) {
-      res.status(400).send('Bad request, mobilenumber format');
+      res.status(400).send('Invalid phonenumber format');
       return;
     }
 
@@ -100,8 +100,8 @@ Future<void> main() async {
       }
     }
     //1 = openvox
-    else {
-      //make get request
+    else if (servicetype == '1') {
+      //make get requestphonenumber
       final queryParameters = {
         'username': 'ovsms',
         'password': 'ovSMS@2020',
@@ -118,6 +118,8 @@ Future<void> main() async {
       } catch (e) {
         res.status(200).send(e.toString());
       }
+    } else {
+      res.status(400).send('Invalid servicetype');
     }
   });
 
