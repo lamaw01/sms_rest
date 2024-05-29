@@ -30,8 +30,6 @@ Future<void> main() async {
     //add delay
     await Future.delayed(Duration(milliseconds: 100));
 
-    String? servicetype = req.query['servicetype'];
-
     //check parameters
     if (!req.query.containsKey('phonenumber') ||
         !req.query.containsKey('message') ||
@@ -71,6 +69,19 @@ Future<void> main() async {
       res.status(400).send('Invalid phonenumber format');
       return;
     }
+
+    String? senderip1 = req.input.headers.host;
+    String? senderip2 = req.input.connectionInfo!.remoteAddress.address;
+    String? senderip3 = req.input.requestedUri.host;
+
+    try {
+      res.status(200).send('$senderip1 $senderip2 $senderip3');
+      return;
+    } catch (e) {
+      res.status(200).send(e.toString());
+    }
+
+    String? servicetype = req.query['servicetype'];
 
     //0 = eztext or null
     if (servicetype == null || servicetype == '0') {
