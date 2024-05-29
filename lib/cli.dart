@@ -76,15 +76,16 @@ Future<void> main() async {
     // var senderip4 = req.header("X-Forwarded-For");
     // var senderip5 = req.header("X-Real-Ip");
     // var senderip6 = req.header("CF-Connecting-IP");
-    var senderip7 = req.input.connectionInfo!.remoteAddress.host;
-    var senderip8 = req.input.connectionInfo!.remoteAddress.isLinkLocal;
-    var senderip9 = req.input.connectionInfo!.remoteAddress.type;
-    var senderip10 = req.input.connectionInfo!.remoteAddress.address;
+    // var senderip7 = req.input.connectionInfo!.remoteAddress.host;
+    // var senderip8 = req.input.connectionInfo!.remoteAddress.isLinkLocal;
+    // var senderip9 = req.input.connectionInfo!.remoteAddress.type;
+    // var senderip10 = req.input.connectionInfo!.remoteAddress.address;
+
+    final clientInfo = req.input.connectionInfo;
 
     try {
-      // res.status(200).send(
-      //     '$senderip1 $senderip2 $senderip3 $senderip4 $senderip5 $senderip6');
-      res.status(200).send('$senderip7 $senderip8 $senderip9 $senderip10');
+      res.status(200).send(
+          '${clientInfo!.localPort} ${clientInfo.remoteAddress} ${clientInfo.remotePort}');
       return;
     } catch (e) {
       res.status(200).send(e.toString());
