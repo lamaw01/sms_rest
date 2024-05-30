@@ -27,6 +27,22 @@ Future<void> main() async {
   });
 
   server.get('/sendsms', (req, res) async {
+    //insert result
+    void insertApiLog(String apiResponse) async {
+      try {
+        final clientInfo = req.input.connectionInfo;
+        String cilentIp = clientInfo?.remoteAddress.address ?? '';
+
+        //make insert query
+        final stmt = await conn
+            .prepare("INSERT INTO api_log (reply, sender) VALUES (?, ?)");
+
+        await stmt.execute([apiResponse, cilentIp]);
+      } catch (e) {
+        print(e.toString());
+      }
+    }
+
     //add delay
     await Future.delayed(Duration(milliseconds: 100));
 
@@ -70,37 +86,16 @@ Future<void> main() async {
       return;
     }
 
-    // String? senderip1 = req.input.headers.host;
-    // String? senderip2 = req.input.connectionInfo!.remoteAddress.address;
-    // String? senderip3 = req.input.requestedUri.host;
-    // var senderip4 = req.header("X-Forwarded-For");
-    // var senderip5 = req.header("X-Real-Ip");
-    // var senderip6 = req.header("CF-Connecting-IP");
-    // var senderip7 = req.input.connectionInfo!.remoteAddress.host;
-    // var senderip8 = req.input.connectionInfo!.remoteAddress.isLinkLocal;
-    // var senderip9 = req.input.connectionInfo!.remoteAddress.type;
-    // var senderip10 = req.input.connectionInfo!.remoteAddress.address;
-
-    final clientInfo = req.input.connectionInfo;
-
-    try {
-      res.status(200).send(
-          '${clientInfo!.localPort} ${clientInfo.remoteAddress} ${clientInfo.remotePort}');
-      return;
-    } catch (e) {
-      res.status(200).send(e.toString());
-    }
-
     String? servicetype = req.query['servicetype'];
+    String apiResponse = '';
 
     //0 = eztext or null
     if (servicetype == null || servicetype == '0') {
-      String messagefrom = req.query['messagefrom'] ?? '';
-      int priority = 99;
-      int sendretry = 20;
-
       try {
-        //make insert query
+        String messagefrom = req.query['messagefrom'] ?? '';
+        int priority = 99;
+        int sendretry = 20;
+
         final stmt = await conn.prepare(
           "INSERT INTO outboxsms (mobilenumber, message, messagefrom, messagecreated, messagesendon, priority, sendretry) VALUES (?, ?, ?, ?, ?, ?, ?)",
         );
@@ -115,29 +110,37 @@ Future<void> main() async {
           sendretry
         ]);
 
+        apiResponse = '${stmtResult.lastInsertID}';
         res.status(200).send('${stmtResult.lastInsertID}');
       } catch (e) {
+        apiResponse = e.toString();
         res.status(200).send(e.toString());
+      } finally {
+        insertApiLog(apiResponse);
       }
     }
     //1 = openvox
     else if (servicetype == '1') {
-      //make get requestphonenumber
-      final queryParameters = {
-        'username': 'ovsms',
-        'password': 'ovSMS@2020',
-        'phonenumber': finalPhonenumber,
-        'message': message,
-        'port': '1'
-      };
       try {
+        final queryParameters = {
+          'username': 'ovsms',
+          'password': 'ovSMS@2020',
+          'phonenumber': finalPhonenumber,
+          'message': message,
+          'port': '1'
+        };
+
         final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
 
         final response = await http.get(uri);
 
+        apiResponse = response.body;
         res.status(200).send(response.body);
       } catch (e) {
+        apiResponse = e.toString();
         res.status(200).send(e.toString());
+      } finally {
+        insertApiLog(apiResponse);
       }
     } else {
       res.status(400).send('Invalid servicetype');
