@@ -16,7 +16,7 @@ Future<void> main() async {
     userName: 'janrey.dumaog',
     password: 'janr3yD', //iTan0ng
     secure: true,
-    databaseName: 'dev', // optional
+    databaseName: 'sms_api', // optional
   );
 
   //connect to database
@@ -27,24 +27,33 @@ Future<void> main() async {
   });
 
   server.get('/sendsms', (req, res) async {
+    //add delay
+    await Future.delayed(Duration(milliseconds: 100));
+
     //insert result
-    void insertApiLog(String apiResponse) async {
+    void insertApiLog(String apiResponse, String phonenumber, String message,
+        String token, String servicetype, String messagefrom) async {
       try {
         final clientInfo = req.input.connectionInfo;
         String cilentIp = clientInfo?.remoteAddress.address ?? '';
 
         //make insert query
-        final stmt = await conn
-            .prepare("INSERT INTO api_log (reply, sender) VALUES (?, ?)");
+        final stmt = await conn.prepare(
+            "INSERT INTO api_log (reply, sender, phonenumber, message, token, servicetype, messagefrom) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-        await stmt.execute([apiResponse, cilentIp]);
+        await stmt.execute([
+          apiResponse,
+          cilentIp,
+          phonenumber,
+          message,
+          token,
+          servicetype,
+          messagefrom
+        ]);
       } catch (e) {
         print(e.toString());
       }
     }
-
-    //add delay
-    await Future.delayed(Duration(milliseconds: 100));
 
     //check parameters
     if (!req.query.containsKey('phonenumber') ||
@@ -54,17 +63,26 @@ Future<void> main() async {
       return;
     }
 
-    //md5->smsapitoken = 7ca04a3af82999d90c60f06cf3780d99
-    String token = req.query['token']!;
-
-    //check token
-    if (token != '7ca04a3af82999d90c60f06cf3780d99') {
-      res.status(401).send('Unauthorized');
-      return;
-    }
-
     String phonenumber = req.query['phonenumber']!;
     String message = req.query['message']!;
+    String token = req.query['token']!;
+    String messagefrom = req.query['messagefrom'] ?? '';
+    String servicetype = req.query['servicetype'] ?? '0';
+
+    //check token auth
+    try {
+      var result = await conn.execute(
+        "SELECT * FROM token WHERE token = :token",
+        {"token": token},
+      );
+      if (result.numOfRows == 0) {
+        res.status(401).send('Unauthorized');
+        return;
+      }
+    } catch (e) {
+      res.status(401).send(e.toString());
+      return;
+    }
 
     bool is63 = phonenumber.startsWith(' 63');
     bool is09 = phonenumber.startsWith('09');
@@ -86,16 +104,13 @@ Future<void> main() async {
       return;
     }
 
-    String? servicetype = req.query['servicetype'];
     String apiResponse = '';
 
     //0 = eztext or null
-    if (servicetype == null || servicetype == '0') {
+    if (servicetype == '0') {
+      int priority = 99;
+      int sendretry = 20;
       try {
-        String messagefrom = req.query['messagefrom'] ?? '';
-        int priority = 99;
-        int sendretry = 20;
-
         final stmt = await conn.prepare(
           "INSERT INTO outboxsms (mobilenumber, message, messagefrom, messagecreated, messagesendon, priority, sendretry) VALUES (?, ?, ?, ?, ?, ?, ?)",
         );
@@ -116,20 +131,20 @@ Future<void> main() async {
         apiResponse = e.toString();
         res.status(200).send(e.toString());
       } finally {
-        insertApiLog(apiResponse);
+        insertApiLog(
+            apiResponse, phonenumber, message, token, servicetype, messagefrom);
       }
     }
     //1 = openvox
     else if (servicetype == '1') {
+      final queryParameters = {
+        'username': 'ovsms',
+        'password': 'ovSMS@2020',
+        'phonenumber': finalPhonenumber,
+        'message': message,
+        'port': '1'
+      };
       try {
-        final queryParameters = {
-          'username': 'ovsms',
-          'password': 'ovSMS@2020',
-          'phonenumber': finalPhonenumber,
-          'message': message,
-          'port': '1'
-        };
-
         final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
 
         final response = await http.get(uri);
@@ -140,7 +155,8 @@ Future<void> main() async {
         apiResponse = e.toString();
         res.status(200).send(e.toString());
       } finally {
-        insertApiLog(apiResponse);
+        insertApiLog(
+            apiResponse, phonenumber, message, token, servicetype, messagefrom);
       }
     } else {
       res.status(400).send('Invalid servicetype');
