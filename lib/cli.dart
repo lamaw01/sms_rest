@@ -10,23 +10,25 @@ import 'package:http/http.dart' as http;
 Future<void> main() async {
   final server = Server();
 
+  final conn = await MySQLConnection.createConnection(
+    host: '192.168.221.21', //localhost
+    port: 3306,
+    userName: 'janrey.dumaog',
+    password: 'janr3yD', //iTan0ng
+    secure: true,
+    databaseName: 'sms_api', // optional
+  );
+
   // final conn = await MySQLConnection.createConnection(
-  //   host: '192.168.221.21', //localhost
+  //   host: '172.21.3.22',
   //   port: 3306,
-  //   userName: 'janrey.dumaog',
-  //   password: 'janr3yD', //iTan0ng
+  //   userName: 'sms-api',
+  //   password: '5m5-AP1',
   //   secure: true,
-  //   databaseName: 'sms_api', // optional
+  //   databaseName: 'pctvsms',
   // );
 
-  final conn = await MySQLConnection.createConnection(
-    host: '172.21.3.22', //localhost
-    port: 3306,
-    userName: 'sms-api',
-    password: '5m5-AP1', //iTan0ng
-    // secure: false,
-    databaseName: 'pctvsms', // optional
-  );
+  //mysql -h 172.21.3.22 -u sms-api -p
 
   //connect to database
   await conn.connect();
@@ -42,27 +44,27 @@ Future<void> main() async {
     // show api guide
     void showGuide(String errorMessage) {
       res.status(200).send('''
-          $errorMessage
-          ------------------------------------------
-          Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
-          1. phonenumber
-                description: Destination phonenumber to which the message is to be sent.
-                format: +639670266317 or 09670266317
-                necessity: Required
-          2. message
-                description: Message to be sent.
-                necessity: Required
-          3. token
-                description: Used for autentication.
-                necessity: Required
-          4. messagefrom
-                description: String which message sent from.
-                necessity: Optional
-          5. servicetype
-                description: Select what service to choose.
-                format: 0 or 1
-                necessity: Optional
-          ''');
+        $errorMessage
+        ------------------------------------------
+        Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
+        1. phonenumber
+              description: Destination phonenumber to which the message is to be sent.
+              format: +639670266317 or 09670266317
+              necessity: Required
+        2. message
+              description: Message to be sent.
+              necessity: Required
+        3. token
+              description: Used for autentication.
+              necessity: Required
+        4. messagefrom
+              description: String which message sent from.
+              necessity: Optional
+        5. servicetype
+              description: Select what service to choose.
+              format: 0 or 1
+              necessity: Optional
+        ''');
     }
 
     // insert result
@@ -117,11 +119,13 @@ Future<void> main() async {
         {"token": token},
       );
       if (result.numOfRows == 0) {
-        res.status(401).send('Unauthorized');
+        // res.status(401).send('Unauthorized');
+        showGuide('Unauthorized.');
         return;
       }
     } catch (e) {
-      res.status(401).send(e.toString());
+      // res.status(401).send(e.toString());
+      showGuide(e.toString());
       return;
     }
 
@@ -173,7 +177,8 @@ Future<void> main() async {
         res.status(200).send('${stmtResult.lastInsertID}');
       } catch (e) {
         apiResponse = e.toString();
-        res.status(200).send(e.toString());
+        // res.status(200).send(e.toString());
+        showGuide(e.toString());
       } finally {
         insertApiLog(
             apiResponse, phonenumber, message, token, servicetype, messagefrom);
@@ -200,13 +205,14 @@ Future<void> main() async {
         res.status(200).send(response.body);
       } catch (e) {
         apiResponse = e.toString();
-        res.status(200).send(e.toString());
+        // res.status(200).send(e.toString());
+        showGuide(e.toString());
       } finally {
         insertApiLog(
             apiResponse, phonenumber, message, token, servicetype, messagefrom);
       }
     } else {
-      res.status(400).send('Invalid servicetype');
+      showGuide('Invalid servicetype.');
     }
   });
 
