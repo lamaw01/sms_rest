@@ -1,6 +1,7 @@
 import 'package:mysql_client/mysql_client.dart';
 import 'package:server_nano/server_nano.dart';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 
 // phonenumber -> required
 // message -> required
@@ -42,29 +43,16 @@ Future<void> main() async {
     await Future.delayed(Duration(milliseconds: 100));
 
     // show api guide
-    void showGuide(String errorMessage) {
-      res.status(200).send('''
-        $errorMessage
-        ------------------------------------------
-        Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
-        1. phonenumber
-              description: Destination phonenumber to which the message is to be sent.
-              format: +639670266317 or 09670266317
-              necessity: Required
-        2. message
-              description: Message to be sent.
-              necessity: Required
-        3. token
-              description: Used for autentication.
-              necessity: Required
-        4. messagefrom
-              description: String which message sent from.
-              necessity: Optional
-        5. servicetype
-              description: Select what service to choose.
-              format: 0 or 1
-              necessity: Optional
-        ''');
+    void showGuide(String errorMessage) async {
+      try {
+        final File file = File('file/guide.txt');
+        String guide = await file.readAsString();
+
+        res.status(200).send('$errorMessage\n$guide');
+      } catch (e) {
+        print(e.toString());
+        res.status(200).send(errorMessage);
+      }
     }
 
     // insert result
@@ -218,3 +206,23 @@ Future<void> main() async {
 
   server.listen(port: 3000, serverMode: ServerMode.compatibility);
 }
+
+
+
+// Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
+// 1. phonenumber
+//         description: Destination phonenumber to which the message is to be sent.
+//         format: +639670266317 or 09670266317
+//         necessity: Required
+// 2. message
+//         description: Message to be sent.
+//         necessity: Required
+// 3. token
+//         description: Used for autentication.
+//         necessity: Required
+// 4. messagefrom
+//         description: String which message sent from.
+//         necessity: Optional
+// 5. servicetype
+//         description: Select what service to choose.
+//         format: 0 or 1
