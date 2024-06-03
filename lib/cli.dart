@@ -10,13 +10,22 @@ import 'package:http/http.dart' as http;
 Future<void> main() async {
   final server = Server();
 
+  // final conn = await MySQLConnection.createConnection(
+  //   host: '192.168.221.21', //localhost
+  //   port: 3306,
+  //   userName: 'janrey.dumaog',
+  //   password: 'janr3yD', //iTan0ng
+  //   secure: true,
+  //   databaseName: 'sms_api', // optional
+  // );
+
   final conn = await MySQLConnection.createConnection(
-    host: '192.168.221.21', //localhost
+    host: '172.21.3.22', //localhost
     port: 3306,
-    userName: 'janrey.dumaog',
-    password: 'janr3yD', //iTan0ng
-    secure: true,
-    databaseName: 'sms_api', // optional
+    userName: 'sms-api',
+    password: '5m5-AP1', //iTan0ng
+    // secure: false,
+    databaseName: 'pctvsms', // optional
   );
 
   //connect to database
@@ -26,11 +35,37 @@ Future<void> main() async {
     res.send('MYSQL connected: ${conn.connected}');
   });
 
-  server.get('/sendsms', (req, res) async {
-    //add delay
+  server.post('/sendsms', (req, res) async {
+    // add delay
     await Future.delayed(Duration(milliseconds: 100));
 
-    //insert result
+    // show api guide
+    void showGuide(String errorMessage) {
+      res.status(200).send('''
+          $errorMessage
+          ------------------------------------------
+          Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
+          1. phonenumber
+                description: Destination phonenumber to which the message is to be sent.
+                format: +639670266317 or 09670266317
+                necessity: Required
+          2. message
+                description: Message to be sent.
+                necessity: Required
+          3. token
+                description: Used for autentication.
+                necessity: Required
+          4. messagefrom
+                description: String which message sent from.
+                necessity: Optional
+          5. servicetype
+                description: Select what service to choose.
+                format: 0 or 1
+                necessity: Optional
+          ''');
+    }
+
+    // insert result
     void insertApiLog(String apiResponse, String phonenumber, String message,
         String token, String servicetype, String messagefrom) async {
       try {
@@ -55,11 +90,17 @@ Future<void> main() async {
       }
     }
 
-    //check parameters
+    if (req.method == 'GET') {
+      showGuide('Invalid method type.');
+      return;
+    }
+
+    // check parameters
     if (!req.query.containsKey('phonenumber') ||
         !req.query.containsKey('message') ||
         !req.query.containsKey('token')) {
-      res.status(400).send('Missing parameters');
+      // res.status(400).send('Missing parameters');
+      showGuide('Missing parameters.');
       return;
     }
 
@@ -69,7 +110,7 @@ Future<void> main() async {
     String messagefrom = req.query['messagefrom'] ?? '';
     String servicetype = req.query['servicetype'] ?? '0';
 
-    //check token auth
+    // check token auth
     try {
       var result = await conn.execute(
         "SELECT * FROM token WHERE token = :token AND active = 1",
@@ -90,23 +131,26 @@ Future<void> main() async {
     String finalPhonenumber =
         is63 ? phonenumber.replaceRange(0, 1, decodePlussign) : phonenumber;
 
-    //check phone number if proper format
+    // check phone number if proper format
     if ((phonenumber.length != 13 && is63)) {
-      res.status(400).send('Invalid phonenumber format(+63)');
+      // res.status(400).send('Invalid phonenumber format(+63)');
+      showGuide('Invalid phonenumber format(+63).');
       return;
     } else if (phonenumber.length != 11 && is09) {
-      res.status(400).send('Invalid phonenumber format(09)');
+      // res.status(400).send('Invalid phonenumber format(09)');
+      showGuide('Invalid phonenumber format(09).');
       return;
     }
 
     if (!is63 && !is09) {
-      res.status(400).send('Invalid phonenumber format');
+      // res.status(400).send('Invalid phonenumber format');
+      showGuide('Invalid phonenumber format.');
       return;
     }
 
     String apiResponse = '';
 
-    //0 = eztext or null
+    // 0 = eztext or null
     if (servicetype == '0') {
       int priority = 99;
       int sendretry = 20;
@@ -135,14 +179,17 @@ Future<void> main() async {
             apiResponse, phonenumber, message, token, servicetype, messagefrom);
       }
     }
-    //1 = openvox
+    // 1 = openvox
     else if (servicetype == '1') {
+      String openvoxId = 'missmsapi';
+
       final queryParameters = {
         'username': 'ovsms',
         'password': 'ovSMS@2020',
         'phonenumber': finalPhonenumber,
         'message': message,
-        'port': '1'
+        'id': openvoxId,
+        // 'port': '1'
       };
       try {
         final uri = Uri.http('172.21.3.18', '/sendsms', queryParameters);
