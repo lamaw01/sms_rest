@@ -72,7 +72,7 @@ Future<void> main() async {
     //check token auth
     try {
       var result = await conn.execute(
-        "SELECT * FROM token WHERE token = :token",
+        "SELECT * FROM token WHERE token = :token AND active = 1",
         {"token": token},
       );
       if (result.numOfRows == 0) {
