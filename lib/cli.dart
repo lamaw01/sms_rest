@@ -38,7 +38,7 @@ Future<void> main() async {
     res.send('MYSQL connected: ${conn.connected}');
   });
 
-  server.post('/sendsms', (req, res) async {
+  server.get('/sendsms', (req, res) async {
     // add delay
     await Future.delayed(Duration(milliseconds: 100));
 
@@ -80,8 +80,10 @@ Future<void> main() async {
       }
     }
 
-    if (req.method == 'GET') {
-      showGuide('Invalid method type.');
+    String? help = req.query['help'];
+
+    if (help != null) {
+      showGuide('Guide for api.');
       return;
     }
 
