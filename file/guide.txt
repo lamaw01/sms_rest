@@ -5,7 +5,7 @@
 API Guide
 ---------------------------------
 Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
-1. phonenumber
+1. phonenumber:
         description: Destination phonenumber to which the message is to be sent.
         format: +639670266317 or 09670266317
         necessity: Required
