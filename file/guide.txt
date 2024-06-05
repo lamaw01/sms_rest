@@ -1,18 +1,24 @@
+
+
+
+---------------------------------
+API Guide
 ---------------------------------
 Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
 1. phonenumber
         description: Destination phonenumber to which the message is to be sent.
         format: +639670266317 or 09670266317
         necessity: Required
-2. message
+2. message:
         description: Message to be sent.
         necessity: Required
-3. token
-        description: Used for autentication.
+3. token:
+        description: Used for autentication. Token and IP should match.
         necessity: Required
-4. messagefrom
+4. messagefrom:
         description: String which message sent from.
         necessity: Optional
-5. servicetype
+5. servicetype:
         description: Select what service to choose.
         format: 0 or 1
+        necessity: Optional

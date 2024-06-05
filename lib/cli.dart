@@ -1,23 +1,19 @@
 import 'package:mysql_client/mysql_client.dart';
 import 'package:server_nano/server_nano.dart';
+import '../openvox_response.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
 
-// phonenumber -> required
-// message -> required
-// token -> required
-// servicetype -> optional, default null. 0=eztext, 1=openvox
-// messagefrom -> optional, only for eztext
 Future<void> main() async {
   final server = Server();
 
   final conn = await MySQLConnection.createConnection(
-    host: '192.168.221.21', //localhost
+    host: '192.168.221.21',
     port: 3306,
     userName: 'janrey.dumaog',
-    password: 'janr3yD', //iTan0ng
+    password: 'janr3yD',
     secure: true,
-    databaseName: 'sms_api', // optional
+    databaseName: 'sms_api',
   );
 
   // final conn = await MySQLConnection.createConnection(
@@ -48,7 +44,7 @@ Future<void> main() async {
         final File file = File('file/guide.txt');
         String guide = await file.readAsString();
 
-        res.status(200).send('$errorMessage\n$guide');
+        res.status(200).send('Message: $errorMessage\n$guide');
       } catch (e) {
         print(e.toString());
         res.status(200).send(errorMessage);
@@ -56,12 +52,15 @@ Future<void> main() async {
     }
 
     // insert result
-    void insertApiLog(String apiResponse, String phonenumber, String message,
-        String token, String servicetype, String messagefrom) async {
+    void insertApiLog(
+        String apiResponse,
+        String cilentIp,
+        String phonenumber,
+        String message,
+        String token,
+        String servicetype,
+        String messagefrom) async {
       try {
-        final clientInfo = req.input.connectionInfo;
-        String cilentIp = clientInfo?.remoteAddress.address ?? '';
-
         //make insert query
         final stmt = await conn.prepare(
             "INSERT INTO api_log (reply, sender, phonenumber, message, token, servicetype, messagefrom) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -80,18 +79,10 @@ Future<void> main() async {
       }
     }
 
-    String? help = req.query['help'];
-
-    if (help != null) {
-      showGuide('Guide for api.');
-      return;
-    }
-
     // check parameters
     if (!req.query.containsKey('phonenumber') ||
         !req.query.containsKey('message') ||
         !req.query.containsKey('token')) {
-      // res.status(400).send('Missing parameters');
       showGuide('Missing parameters.');
       return;
     }
@@ -101,20 +92,20 @@ Future<void> main() async {
     String token = req.query['token']!;
     String messagefrom = req.query['messagefrom'] ?? '';
     String servicetype = req.query['servicetype'] ?? '0';
+    var clientInfo = req.input.connectionInfo;
+    String cilentIp = clientInfo?.remoteAddress.address ?? '';
 
     // check token auth
     try {
       var result = await conn.execute(
-        "SELECT * FROM token WHERE token = :token AND active = 1",
-        {"token": token},
+        "SELECT * FROM token WHERE token = :token AND address = :address AND active = 1",
+        {"token": token, "address": cilentIp},
       );
       if (result.numOfRows == 0) {
-        // res.status(401).send('Unauthorized');
         showGuide('Unauthorized.');
         return;
       }
     } catch (e) {
-      // res.status(401).send(e.toString());
       showGuide(e.toString());
       return;
     }
@@ -127,17 +118,14 @@ Future<void> main() async {
 
     // check phone number if proper format
     if ((phonenumber.length != 13 && is63)) {
-      // res.status(400).send('Invalid phonenumber format(+63)');
       showGuide('Invalid phonenumber format(+63).');
       return;
     } else if (phonenumber.length != 11 && is09) {
-      // res.status(400).send('Invalid phonenumber format(09)');
       showGuide('Invalid phonenumber format(09).');
       return;
     }
 
     if (!is63 && !is09) {
-      // res.status(400).send('Invalid phonenumber format');
       showGuide('Invalid phonenumber format.');
       return;
     }
@@ -167,23 +155,20 @@ Future<void> main() async {
         res.status(200).send('${stmtResult.lastInsertID}');
       } catch (e) {
         apiResponse = e.toString();
-        // res.status(200).send(e.toString());
         showGuide(e.toString());
       } finally {
-        insertApiLog(
-            apiResponse, phonenumber, message, token, servicetype, messagefrom);
+        insertApiLog(apiResponse, phonenumber, message, token, servicetype,
+            messagefrom, cilentIp);
       }
     }
     // 1 = openvox
     else if (servicetype == '1') {
-      String openvoxId = 'missmsapi';
-
       final queryParameters = {
         'username': 'ovsms',
         'password': 'ovSMS@2020',
         'phonenumber': finalPhonenumber,
         'message': message,
-        'id': openvoxId,
+        'id': 'missmsapi',
         // 'port': '1'
       };
       try {
@@ -191,15 +176,16 @@ Future<void> main() async {
 
         final response = await http.get(uri);
 
-        apiResponse = response.body;
+        var openvoxResponse = openvoxResponseFromJson(response.body);
+
+        apiResponse = openvoxResponse.report.first.detail.first.id;
         res.status(200).send(response.body);
       } catch (e) {
         apiResponse = e.toString();
-        // res.status(200).send(e.toString());
         showGuide(e.toString());
       } finally {
-        insertApiLog(
-            apiResponse, phonenumber, message, token, servicetype, messagefrom);
+        insertApiLog(apiResponse, phonenumber, message, token, servicetype,
+            messagefrom, cilentIp);
       }
     } else {
       showGuide('Invalid servicetype.');
@@ -208,23 +194,3 @@ Future<void> main() async {
 
   server.listen(port: 3000, serverMode: ServerMode.compatibility);
 }
-
-
-
-// Usage: http://103.62.153.74:52000/sendsms?phonenumber=xxx&message=xxx&token=xxx&messagefrom=xxx&servicetype
-// 1. phonenumber
-//         description: Destination phonenumber to which the message is to be sent.
-//         format: +639670266317 or 09670266317
-//         necessity: Required
-// 2. message
-//         description: Message to be sent.
-//         necessity: Required
-// 3. token
-//         description: Used for autentication.
-//         necessity: Required
-// 4. messagefrom
-//         description: String which message sent from.
-//         necessity: Optional
-// 5. servicetype
-//         description: Select what service to choose.
-//         format: 0 or 1
