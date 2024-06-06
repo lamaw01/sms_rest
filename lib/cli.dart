@@ -1,7 +1,9 @@
+import 'package:intl/intl.dart';
 import 'package:mysql_client/mysql_client.dart';
 import 'package:server_nano/server_nano.dart';
-import '../openvox_response.dart';
 import 'package:http/http.dart' as http;
+import '../openvox_response.dart';
+
 import 'dart:io';
 
 Future<void> main() async {
@@ -38,6 +40,20 @@ Future<void> main() async {
     // add delay
     await Future.delayed(Duration(milliseconds: 100));
 
+    // write error log
+    void writeErrorLog(String errorMessage) async {
+      try {
+        final File file = File('file/log.txt');
+        var dateformat = DateFormat('yyyy-MM-dd HH:mm:ss');
+        var timestamp = dateformat.format(DateTime.now());
+
+        await file.writeAsString('$timestamp -> $errorMessage\n',
+            mode: FileMode.writeOnlyAppend);
+      } catch (e) {
+        print(e.toString());
+      }
+    }
+
     // show api guide
     void showGuide(String errorMessage) async {
       try {
@@ -46,8 +62,7 @@ Future<void> main() async {
 
         res.status(200).send('Message: $errorMessage\n$guide');
       } catch (e) {
-        print(e.toString());
-        res.status(200).send(errorMessage);
+        res.status(200).send('Message: $errorMessage\n$e');
       }
     }
 
@@ -75,7 +90,7 @@ Future<void> main() async {
           messagefrom
         ]);
       } catch (e) {
-        print(e.toString());
+        writeErrorLog(e.toString());
       }
     }
 
@@ -91,14 +106,14 @@ Future<void> main() async {
     String message = req.query['message']!;
     String token = req.query['token']!;
     String messagefrom = req.query['messagefrom'] ?? '';
-    String servicetype = req.query['servicetype'] ?? '0';
+    String servicetype = req.query['servicetype'] ?? '1';
     var clientInfo = req.input.connectionInfo;
     String cilentIp = clientInfo?.remoteAddress.address ?? '';
 
     // check token auth
     try {
       var result = await conn.execute(
-        "SELECT * FROM token WHERE token = :token AND address = :address AND active = 1",
+        "SELECT * FROM tokentest WHERE token = :token AND address = :address AND active = 1 das",
         {"token": token, "address": cilentIp},
       );
       if (result.numOfRows == 0) {
@@ -106,6 +121,7 @@ Future<void> main() async {
         return;
       }
     } catch (e) {
+      writeErrorLog(e.toString());
       showGuide(e.toString());
       return;
     }
@@ -155,6 +171,7 @@ Future<void> main() async {
         res.status(200).send('${stmtResult.lastInsertID}');
       } catch (e) {
         apiResponse = e.toString();
+        writeErrorLog(e.toString());
         showGuide(e.toString());
       } finally {
         insertApiLog(apiResponse, phonenumber, message, token, servicetype,
@@ -182,6 +199,7 @@ Future<void> main() async {
         res.status(200).send(response.body);
       } catch (e) {
         apiResponse = e.toString();
+        writeErrorLog(e.toString());
         showGuide(e.toString());
       } finally {
         insertApiLog(apiResponse, phonenumber, message, token, servicetype,
