@@ -1,2 +1,4 @@
 2024-06-06 15:03:12 -> MySQLServerException [1146]: Table 'sms_api.tokentest' doesn't exist
 2024-06-06 15:03:38 -> MySQLServerException [1064]: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'das' at line 1
+2024-06-06 16:02:29 -> MySQLServerException [1146]: Table 'sms_api.tokentest' doesn't exist
+2024-06-06 16:02:38 -> MySQLServerException [1146]: Table 'sms_api.tokentest' doesn't exist
