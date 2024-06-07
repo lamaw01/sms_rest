@@ -153,9 +153,10 @@ Future<void> main() async {
 
     // 0 = eztext or null
     if (servicetype == '0') {
-      int priority = 99;
-      int sendretry = 20;
       try {
+        int priority = 99;
+        int sendretry = 20;
+
         final stmt = await conn.prepare(
           "INSERT INTO outboxsms (mobilenumber, message, messagefrom, messagecreated, messagesendon, priority, sendretry) VALUES (?, ?, ?, ?, ?, ?, ?)",
         );
@@ -205,6 +206,54 @@ Future<void> main() async {
         var apiResponse = response.body;
 
         var apilogID = await insertApiLog(apiResponse, cilentIp, phonenumber,
+            message, token, servicetype, messagefrom);
+
+        res.status(200).send(apilogID);
+      } catch (e) {
+        writeErrorLog(e.toString());
+        showGuide(e.toString());
+      }
+    } else if (servicetype == '2') {
+      final String username = 'root';
+      final String password = 'iTan0ngmosaIt';
+
+      try {
+        final queryParameters1 = {
+          'USERNAME': username,
+          'PASSWORD': password,
+          'smsnum': finalPhonenumber,
+          'Memo': message,
+          'smsprovider': '1',
+          'method': '2',
+        };
+
+        final uri1 =
+            Uri.http('172.21.3.32', '/goip/en/dosend.php', queryParameters1);
+
+        final response1 = await http.get(uri1);
+
+        var apiResponse1 = response1.body;
+
+        int messageidIndex = apiResponse1.indexOf('messageid=');
+        int usernameIndex = apiResponse1.indexOf('USERNAME=');
+
+        String messageid =
+            apiResponse1.substring(messageidIndex + 10, usernameIndex - 1);
+
+        final queryParameters2 = {
+          'messageid': messageid,
+          'USERNAME': username,
+          'PASSWORD': password,
+        };
+
+        final uri2 =
+            Uri.http('172.21.3.32', '/goip/en/resend.php', queryParameters2);
+
+        final response2 = await http.get(uri2);
+
+        var apiResponse2 = response2.body;
+
+        var apilogID = await insertApiLog(apiResponse2, cilentIp, phonenumber,
             message, token, servicetype, messagefrom);
 
         res.status(200).send(apilogID);
