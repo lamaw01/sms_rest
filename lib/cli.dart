@@ -2,38 +2,39 @@ import 'package:intl/intl.dart';
 import 'package:mysql_client/mysql_client.dart';
 import 'package:server_nano/server_nano.dart';
 import 'package:http/http.dart' as http;
-import '../openvox_response.dart';
+// import '../openvox_response.dart';
 
 import 'dart:io';
 
 Future<void> main() async {
   final server = Server();
 
-  final conn = await MySQLConnection.createConnection(
+  // final conn = await MySQLConnection.createConnection(
+  //   host: '192.168.221.21', // 172.21.3.22
+  //   port: 3306,
+  //   userName: 'janrey.dumaog', // sms-api
+  //   password: 'janr3yD', // 5m5-AP1
+  //   secure: true,
+  //   databaseName: 'sms_api', // pctvsms
+  // );
+
+  final conn = MySQLConnectionPool(
     host: '192.168.221.21',
     port: 3306,
     userName: 'janrey.dumaog',
     password: 'janr3yD',
     secure: true,
     databaseName: 'sms_api',
+    maxConnections: 5,
   );
-
-  // final conn = await MySQLConnection.createConnection(
-  //   host: '172.21.3.22',
-  //   port: 3306,
-  //   userName: 'sms-api',
-  //   password: '5m5-AP1',
-  //   secure: true,
-  //   databaseName: 'pctvsms',
-  // );
 
   //mysql -h 172.21.3.22 -u sms-api -p
 
-  //connect to database
-  await conn.connect();
+  // connect to database
+  // await conn.connect();
 
   server.get('/', (req, res) {
-    res.send('MYSQL connected: ${conn.connected}');
+    res.send('MYSQL connected: ${conn.activeConnectionsQty}');
   });
 
   server.get('/sendsms', (req, res) async {
@@ -67,7 +68,7 @@ Future<void> main() async {
     }
 
     // insert result
-    void insertApiLog(
+    Future<String> insertApiLog(
         String apiResponse,
         String cilentIp,
         String phonenumber,
@@ -75,12 +76,13 @@ Future<void> main() async {
         String token,
         String servicetype,
         String messagefrom) async {
+      String id = '';
       try {
         //make insert query
         final stmt = await conn.prepare(
             "INSERT INTO api_log (reply, sender, phonenumber, message, token, servicetype, messagefrom) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-        await stmt.execute([
+        var stmtResult = await stmt.execute([
           apiResponse,
           cilentIp,
           phonenumber,
@@ -89,9 +91,12 @@ Future<void> main() async {
           servicetype,
           messagefrom
         ]);
+
+        id = stmtResult.lastInsertID.toString();
       } catch (e) {
         writeErrorLog(e.toString());
       }
+      return id;
     }
 
     // check parameters
@@ -146,8 +151,6 @@ Future<void> main() async {
       return;
     }
 
-    String apiResponse = '';
-
     // 0 = eztext or null
     if (servicetype == '0') {
       int priority = 99;
@@ -167,15 +170,17 @@ Future<void> main() async {
           sendretry
         ]);
 
-        apiResponse = '${stmtResult.lastInsertID}';
-        res.status(200).send('${stmtResult.lastInsertID}');
+        // res.status(200).send('${stmtResult.lastInsertID}');
+
+        var apiResponse = '${stmtResult.lastInsertID}';
+
+        var apilogID = await insertApiLog(apiResponse, cilentIp, phonenumber,
+            message, token, servicetype, messagefrom);
+
+        res.status(200).send(apilogID);
       } catch (e) {
-        apiResponse = e.toString();
         writeErrorLog(e.toString());
         showGuide(e.toString());
-      } finally {
-        insertApiLog(apiResponse, phonenumber, message, token, servicetype,
-            messagefrom, cilentIp);
       }
     }
     // 1 = openvox
@@ -193,17 +198,19 @@ Future<void> main() async {
 
         final response = await http.get(uri);
 
-        var openvoxResponse = openvoxResponseFromJson(response.body);
+        // var openvoxResponse = openvoxResponseFromJson(response.body);
 
-        apiResponse = openvoxResponse.report.first.detail.first.id;
-        res.status(200).send(response.body);
+        // apiResponse = openvoxResponse.report.first.detail.first.id;
+
+        var apiResponse = response.body;
+
+        var apilogID = await insertApiLog(apiResponse, cilentIp, phonenumber,
+            message, token, servicetype, messagefrom);
+
+        res.status(200).send(apilogID);
       } catch (e) {
-        apiResponse = e.toString();
         writeErrorLog(e.toString());
         showGuide(e.toString());
-      } finally {
-        insertApiLog(apiResponse, phonenumber, message, token, servicetype,
-            messagefrom, cilentIp);
       }
     } else {
       showGuide('Invalid servicetype.');
