@@ -18,6 +18,11 @@ Future<void> main() async {
   //   databaseName: 'sms_api', // pctvsms
   // );
 
+  // mysql -h 172.21.3.22 -u sms-api -p
+
+  // connect to database
+  // await conn.connect();
+
   final conn = MySQLConnectionPool(
     host: '192.168.221.21',
     port: 3306,
@@ -28,12 +33,7 @@ Future<void> main() async {
     maxConnections: 5,
   );
 
-  //mysql -h 172.21.3.22 -u sms-api -p
-
-  // connect to database
-  // await conn.connect();
-
-  Future<void> sensms(ContextRequest req, ContextResponse res) async {
+  Future<void> sendsms(ContextRequest req, ContextResponse res) async {
     // add delay
     await Future.delayed(Duration(milliseconds: 100));
 
@@ -263,12 +263,11 @@ Future<void> main() async {
   }
 
   server.get('/', (req, res) async {
-    // res.send('MYSQL connected: ${conn.activeConnectionsQty}');
-    await sensms(req, res);
+    await sendsms(req, res);
   });
 
   server.get('/sendsms', (req, res) async {
-    await sensms(req, res);
+    await sendsms(req, res);
   });
 
   server.listen(port: 3000, serverMode: ServerMode.compatibility);
