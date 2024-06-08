@@ -33,11 +33,7 @@ Future<void> main() async {
   // connect to database
   // await conn.connect();
 
-  server.get('/', (req, res) {
-    res.send('MYSQL connected: ${conn.activeConnectionsQty}');
-  });
-
-  server.get('/sendsms', (req, res) async {
+  Future<void> sensms(ContextRequest req, ContextResponse res) async {
     // add delay
     await Future.delayed(Duration(milliseconds: 100));
 
@@ -214,8 +210,8 @@ Future<void> main() async {
         showGuide(e.toString());
       }
     } else if (servicetype == '2') {
-      final String username = 'root';
-      final String password = 'iTan0ngmosaIt';
+      final String username = 'sms-api';
+      final String password = '5m5-AP1';
 
       try {
         final queryParameters1 = {
@@ -264,6 +260,15 @@ Future<void> main() async {
     } else {
       showGuide('Invalid servicetype.');
     }
+  }
+
+  server.get('/', (req, res) async {
+    // res.send('MYSQL connected: ${conn.activeConnectionsQty}');
+    await sensms(req, res);
+  });
+
+  server.get('/sendsms', (req, res) async {
+    await sensms(req, res);
   });
 
   server.listen(port: 3000, serverMode: ServerMode.compatibility);
