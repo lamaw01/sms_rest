@@ -266,6 +266,11 @@ Future<void> main() async {
     await sendsms(req, res);
   });
 
+  server.get('/test', (req, res) async {
+    bool status = conn.connected;
+    res.status(200).send(status);
+  });
+
   server.get('/sendsms', (req, res) async {
     await sendsms(req, res);
   });
