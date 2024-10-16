@@ -9,29 +9,29 @@ import 'dart:io';
 Future<void> main() async {
   final server = Server();
 
-  // final conn = await MySQLConnection.createConnection(
-  //   host: '192.168.221.21', // 172.21.3.22
-  //   port: 3306,
-  //   userName: 'janrey.dumaog', // sms-api
-  //   password: 'janr3yD', // 5m5-AP1
-  //   secure: true,
-  //   databaseName: 'sms_api', // pctvsms
-  // );
+  final conn = await MySQLConnection.createConnection(
+    host: '192.168.221.21', // 172.21.3.22
+    port: 3306,
+    userName: 'janrey.dumaog', // sms-api
+    password: 'janr3yD', // 5m5-AP1
+    secure: true,
+    databaseName: 'sms_api', // pctvsms
+  );
 
   // mysql -h 172.21.3.22 -u sms-api -p
 
   // connect to database
-  // await conn.connect();
+  await conn.connect();
 
-  final conn = MySQLConnectionPool(
-    host: '192.168.221.21',
-    port: 3306,
-    userName: 'janrey.dumaog',
-    password: 'janr3yD',
-    secure: true,
-    databaseName: 'sms_api',
-    maxConnections: 5,
-  );
+  // final conn = MySQLConnectionPool(
+  //   host: '192.168.221.21',
+  //   port: 3306,
+  //   userName: 'janrey.dumaog',
+  //   password: 'janr3yD',
+  //   secure: true,
+  //   databaseName: 'sms_api',
+  //   maxConnections: 5,
+  // );
 
   Future<void> sendsms(ContextRequest req, ContextResponse res) async {
     // add delay
